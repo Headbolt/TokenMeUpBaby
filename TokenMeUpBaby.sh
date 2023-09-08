@@ -18,7 +18,7 @@
 #			Variable 6 - Named "New Secure Token User - eg. User"
 #			Variable 7 - Named "New Secure Token User Password - eg. AnotherPasswordyThing"
 #
-# 			Note, as of V1.3, if Variable 7 "New Secure Token User" is set to "PasswordJamfManagementAccount!!"
+# 			Note, as of V1.3, if Variable 7 "New Secure Token User" is set to "JamfManagementAccount!!"
 #					It will be assumed you are trying to grant the JAMF Management Account a Secure Token
 #					In which case the below variables MUST be set
 #
