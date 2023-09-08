@@ -26,6 +26,10 @@
 #			Variable 9 - Named "API User - eg. API-User"
 #			Variable 10 - Named "API User Password - eg. YetAnotherPasswordyThing"
 #
+#			The API User set in Variable 9 will need the following permisions ONLY
+#			Jamf Pro Server Objects > Read perms for Computers
+#			Jamf Pro Server Actions > View Local Admin Password
+#
 ###############################################################################################################################################
 #
 # HISTORY
