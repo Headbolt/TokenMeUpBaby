@@ -241,6 +241,7 @@ if [ "$Pass" == "JamfManagementAccount!!" ]
 		GetManagementAccountPassword
 fi
 #
+SectionEnd
 /bin/echo 'Checking Initial Token States'
 SectionEnd
 #
@@ -256,10 +257,6 @@ fi
 #
 if [ $TokenSetProceed == "YES" ]
 	then
-		#
-		/bin/echo 'ensuring "'$adminUser'" account is temporarily a local Admin'
-		dseditgroup -o edit -a $adminUser admin
-		/bin/echo # Outputs a blank line for reporting purposes
 		/bin/echo 'Enabling "'$User'" with a Secure Token'
 		/bin/echo 'Enabling using "'$adminUser'" as the AdminUser'
 		/bin/echo # Outputs a blank line for reporting purposes
@@ -267,6 +264,7 @@ if [ $TokenSetProceed == "YES" ]
 		SectionEnd
 fi
 #       
+SectionEnd
 /bin/echo 'Checking New Token States'
 SecureTokenCheck
 #
