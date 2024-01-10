@@ -19,7 +19,7 @@
 # 			Note, as of V1.4, if Variable 5 "Current Secure Token Admin Password" is set to "Admin Password"
 #					It will be assumed you are trying to pull the Admin User password from a JAMF Extension Attribute
 #					with that name
-
+#
 #			Variable 6 - Named "New Secure Token User - eg. User"
 #			Variable 7 - Named "New Secure Token User Password - eg. AnotherPasswordyThing"
 #
