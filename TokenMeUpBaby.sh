@@ -15,6 +15,11 @@
 #			The Following Variables should be defined
 #			Variable 4 - Named "Current Secure Token Admin User - eg. AdminUser"
 #			Variable 5 - Named "Current Secure Token Admin Password - eg. PasswordyThing"
+#
+# 			Note, as of V1.4, if Variable 5 "Current Secure Token Admin Password" is set to "Admin Password"
+#					It will be assumed you are trying to pull the Admin User password from a JAMF Extension Attribute
+#					with that name
+
 #			Variable 6 - Named "New Secure Token User - eg. User"
 #			Variable 7 - Named "New Secure Token User Password - eg. AnotherPasswordyThing"
 #
@@ -34,7 +39,7 @@
 #
 # HISTORY
 #
-#	Version: 1.3 - 08/09/2023
+#	Version: 1.4 - 10/01/2024
 #
 #	- 15/03/2018 - V1.0 - Created by Headbolt
 #
@@ -46,6 +51,9 @@
 #
 #   - 08/09/2023 - V1.3 - Updated by Headbolt
 #							Updated to allow for retrieval of the JAMF Management account password via the API
+#
+#   - 10/01/2024 - V1.4 - Updated by Headbolt1
+#							Updated to allow for retrieval of the local Admin password via the API
 #
 ###############################################################################################################################################
 #
@@ -60,6 +68,8 @@ Pass=${7} # Grab the password for the user we want to create a token for from JA
 apiURL=${8} # Grab the username for API Login from JAMF variable #8 eg. username
 apiUser=${9} # Grab the password for API Login from JAMF variable #9 eg. password
 apiPass=${10} # Grab the username for FileVault unlock from JAMF variable #10 eg. username
+#
+udid=$(/usr/sbin/system_profiler SPHardwareDataType | /usr/bin/awk '/Hardware UUID:/ { print $3 }') # Grab UUID of machine
 #
 ScriptName="Security | Enable Secure Token on Account" # Set the name of the script for later logging
 ExitCode=0 # Set Initial ExitCode
@@ -171,6 +181,38 @@ Pass=$(curl -s -X GET "${apiURL}/api/v2/local-admin-password/$jamfdevicemanageme
 #
 ###############################################################################################################################################
 #
+# Verify the current User Password in JAMF LAPS
+#
+GetAdminPassword (){
+#
+/bin/echo 'Grabbing Current Password From JAMF API'
+currentPass=$(curl -s -X GET "${apiURL}/JSSResource/computers/udid/$udid/subset/extension_attributes" -H 'Authorization: Bearer '$token'' | xpath -e "//extension_attribute[name=$extAttName]" 2>&1 | awk -F'<value>|</value>' '{print $2}')
+#
+if [ "$currentPass" == "" ]
+	then
+	    /bin/echo "No Password is stored in LAPS."
+	else
+	    /bin/echo "A Password was found in LAPS."
+fi
+#
+if [ "$currentPass" != "" ]
+	then
+		passwdA=`dscl /Local/Default -authonly $adminUser $currentPass`
+		if [ "$passwdA" == "" ]
+			then
+                adminPass=$currentPass
+                /bin/echo "Current Password stored in LAPS for User $adminUser is $currentPass"
+				/bin/echo "Password stored in LAPS is correct for $adminUser."
+			else
+				/bin/echo "Error: Password stored in LAPS is not valid for $adminUser."
+				/bin/echo "Current Password stored in LAPS for User $adminUser is $currentPass"
+				currentPass=""
+		fi
+fi
+}
+#
+###############################################################################################################################################
+#
 # Secure TokenCheck Function
 #
 SecureTokenCheck(){
@@ -239,9 +281,22 @@ if [ "$Pass" == "JamfManagementAccount!!" ]
 		AuthToken
 		SectionEnd
 		GetManagementAccountPassword
+        SectionEnd
 fi
 #
-SectionEnd
+if [ "$adminPass" == "Administrator Password" ]
+	then
+		/bin/echo 'Admin User Password is set to "Administrator Password"'
+		/bin/echo 'This indicates we are attempting to get a password from JAMF'
+		/bin/echo 'Connecting to JAMF to Grab it from the API'
+  		extAttName=$(echo "\"${adminPass}"\") # Place " quotation marks around extension attribute name in the variable
+		SectionEnd
+		AuthToken
+		SectionEnd
+		GetAdminPassword
+        SectionEnd
+fi
+#
 /bin/echo 'Checking Initial Token States'
 SectionEnd
 #
@@ -257,6 +312,10 @@ fi
 #
 if [ $TokenSetProceed == "YES" ]
 	then
+		#
+		/bin/echo 'ensuring "'$adminUser'" account is temporarily a local Admin'
+		dseditgroup -o edit -a $adminUser admin
+		/bin/echo # Outputs a blank line for reporting purposes
 		/bin/echo 'Enabling "'$User'" with a Secure Token'
 		/bin/echo 'Enabling using "'$adminUser'" as the AdminUser'
 		/bin/echo # Outputs a blank line for reporting purposes
@@ -264,7 +323,6 @@ if [ $TokenSetProceed == "YES" ]
 		SectionEnd
 fi
 #       
-SectionEnd
 /bin/echo 'Checking New Token States'
 SecureTokenCheck
 #
