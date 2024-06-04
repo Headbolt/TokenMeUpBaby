@@ -39,9 +39,9 @@
 #
 # HISTORY
 #
-#	Version: 1.4 - 10/01/2024
+#	Version: 1.5 - 04/06/2024
 #
-#	- 15/03/2018 - V1.0 - Created by Headbolt
+#   - 15/03/2018 - V1.0 - Created by Headbolt
 #
 #   - 21/10/2019 - V1.1 - Updated by Headbolt
 #							More comprehensive error checking and notation
@@ -54,6 +54,9 @@
 #
 #   - 10/01/2024 - V1.4 - Updated by Headbolt1
 #							Updated to allow for retrieval of the local Admin password via the API
+#
+#   - 04/06/2024 - V1.5 - Updated by Headbolt
+#							Updated to fix recent issues in the API paths to grab API auth token
 #
 ###############################################################################################################################################
 #
@@ -155,7 +158,7 @@ fi
 AuthToken (){
 #
 /bin/echo 'Getting Athentication Token from JAMF'
-rawtoken=$(curl -s -u ${apiUser}:${apiPass} -X POST "${apiURL}/uapi/auth/tokens" | grep token) # This Authenticates against the JAMF API with the Provided details and obtains an Authentication Token
+rawtoken=$(curl -s -u "${apiUser}:${apiPass}" -X POST "${apiURL}/api/v1/auth/token" | grep token) # This Authenticates against the JAMF API with the Provided details and obtains an Authentication Token
 rawtoken=${rawtoken%?};
 token=$(echo $rawtoken | awk '{print$3}' | cut -d \" -f2)
 #
